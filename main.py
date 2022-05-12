@@ -1,7 +1,12 @@
 import torch
 from torch import nn
 from lpl import LPLPass
-from data import mnist_ds, noise_transform
+from data import noise_transform
+from torchvision import transforms
+from torchvision.datasets import MNIST
+
+mnist_ds = MNIST('./data/', train=True, download=True,
+                 transform=transforms.ToTensor())
 
 
 model = nn.Sequential(

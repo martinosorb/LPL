@@ -34,15 +34,14 @@ class LPLPass(torch.nn.Module):
     """
     mse = torch.nn.MSELoss()
 
-    def __init__(self, n_units, n_dims=1):
+    def __init__(self, n_units, global_average_pooling=False):
         super().__init__()
         self.register_buffer('current_z', torch.zeros(n_units))
+        self.GAP = global_average_pooling
 
     def forward(self, z):
         self.previous_z = self.current_z.detach()
-        self.current_z = z
-
-        # self.tracker(z)  # ONLY for tracking mean and variance
+        self.current_z = torch.mean(z, dim=(-1, -2)) if self.GAP else z
         return z.detach()
 
     def predictive_loss(self):

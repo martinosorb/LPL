@@ -1,9 +1,5 @@
-from torchvision.datasets import MNIST
 from torchvision import transforms
 import torch
-
-mnist_ds = MNIST('./data/', train=True, download=True,
-                 transform=transforms.ToTensor())
 
 
 def add_noise(img):
@@ -13,3 +9,10 @@ def add_noise(img):
 
 
 noise_transform = transforms.Lambda(add_noise)
+
+multiple_transform = transforms.Compose([
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomAffine(degrees=5, translate=(0.1, 0.1), scale=(0.9, 1.1)),
+    transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
+    transforms.GaussianBlur(kernel_size=(3, 5), sigma=(0.1, 2)),
+])
