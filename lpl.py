@@ -1,0 +1,64 @@
+import torch
+
+
+# class MeanVarTracker:
+#     def __init__(self, momentum=0.1):
+#         self.reset()
+#         self.momentum = momentum
+
+#     def _tracker_init(self, x):
+#         self.mean = torch.zeros_like(x[0], requires_grad=False)
+#         self.var = torch.ones_like(x[0], requires_grad=True)
+
+#     def reset(self):
+#         self.mean = None
+#         self.var = None
+
+#     def __call__(self, x):
+#         if self.mean is None:
+#             self._tracker_init(x)
+#         self.mean += self.momentum * (x.mean(0).detach() - self.mean)
+#         var = torch.mean((x - self.mean)**2, axis=0)
+#         self.var = self.var + self.momentum * (var - self.var)
+
+
+class LPLPass(torch.nn.Module):
+    """
+    This layer should do three things:
+    - detach its output so that no backprop is allowed
+    - keep track of means and variances to compute losses
+    - provide utilities that compute the local losses
+
+    Arguments:
+        n_dims: dimensions of the input, excluding batch size
+    """
+    mse = torch.nn.MSELoss()
+
+    def __init__(self, n_units, n_dims=1):
+        super().__init__()
+        self.register_buffer('current_z', torch.zeros(n_units))
+
+    def forward(self, z):
+        self.previous_z = self.current_z.detach()
+        self.current_z = z
+
+        # self.tracker(z)  # ONLY for tracking mean and variance
+        return z.detach()
+
+    def predictive_loss(self):
+        return 0.5 * self.mse(self.current_z, self.previous_z)
+
+    def hebbian_loss(self):
+        var = torch.var(self.current_z - self.current_z.mean(0).detach())
+        return -torch.log(var).sum()
+
+    def decorr_loss(self):
+        z = self.current_z
+        batch_size = z.shape[0]
+        n_neurons = z.shape[1]
+        beta = 1./batch_size/(n_neurons-1)
+
+        centered_z_sq = (z - z.mean().detach()) ** 2
+        varmatrix = torch.einsum("bi,bj->bij", centered_z_sq, centered_z_sq)
+        varmatrix.diagonal(1, 2).zero_()
+        return 0.5 * beta * varmatrix.sum()
