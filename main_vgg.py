@@ -32,4 +32,4 @@ for epoch in range(10):
 
     print(f"EPOCH {epoch}")
     print(loss_tracker / batch_count)
-    torch.save(model.state_dict(), "lplvgg11.pth")
+    torch.save(model.state_dict(), "models/lplvgg11.pth")
