@@ -4,7 +4,6 @@ from lpl import LPLPass
 from torchvision.models import vgg11
 
 RELU_IDX = [1, 4, 7, 9, 12, 14, 17, 19]
-lambda1, lambda2 = 1., 10.
 
 
 class LPLVGG11(nn.Module):
@@ -22,7 +21,7 @@ class LPLVGG11(nn.Module):
     def forward(self, x):
         return self.final_avgpool(self.model(x))
 
-    def compute_lpl_losses(self):
+    def compute_lpl_losses(self, lambda1, lambda2):
         loss = torch.zeros(3, len(RELU_IDX))
         for i, idx in enumerate(RELU_IDX):
             lpl_layer = self.model[idx][1]

@@ -8,8 +8,8 @@ model = LPLVGG11()
 
 cifar_ds = torchvision.datasets.CIFAR10(
     root='../datasets/', transform=torchvision.transforms.ToTensor())
-dl = torch.utils.data.DataLoader(cifar_ds, batch_size=512)
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+dl = torch.utils.data.DataLoader(cifar_ds, batch_size=800)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1.5e-6)
 model.cuda()
 
 for epoch in range(10):
@@ -22,7 +22,7 @@ for epoch in range(10):
         out = model(multiple_transform(images))  # first forward
         out = model(multiple_transform(images))  # second forward
 
-        losses = model.compute_lpl_losses()
+        losses = model.compute_lpl_losses(lambda1=1., lambda2=10.)
         loss_tracker += losses
         total_loss = losses.sum()
         total_loss.backward()
