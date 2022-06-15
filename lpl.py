@@ -48,11 +48,12 @@ class LPLPass(torch.nn.Module):
         return z.detach()
 
     def predictive_loss(self):
-        return 0.5 * self.mse(self.current_z, self.previous_z)
+        return 0.5 * self.mse(self.current_z, self.previous_z)  # looks good
 
     def hebbian_loss(self):
-        var = torch.var(self.current_z - self.current_z.mean(0).detach())
-        return -torch.log(var).sum()
+        var = torch.var(self.current_z - self.current_z.mean(0).detach(), dim=0)
+        EPS = 1e-6  # TODO problematic. this depends intensely on epsilon
+        return -torch.log(var + EPS).sum()
 
     def decorr_loss(self):
         z = self.current_z
@@ -60,7 +61,7 @@ class LPLPass(torch.nn.Module):
         n_neurons = z.shape[1]
         beta = 1./batch_size/(n_neurons-1)
 
-        centered_z_sq = (z - z.mean().detach()) ** 2
-        varmatrix = torch.einsum("bi,bj->bij", centered_z_sq, centered_z_sq)
-        varmatrix.diagonal(1, 2).zero_()
-        return 0.5 * beta * varmatrix.sum()
+        centered_z_sq = (z - z.mean(0).detach()) ** 2  # bug fixed: mean along axis
+        varmatrix = torch.einsum("bi,bj->ij", centered_z_sq, centered_z_sq)
+        varmatrix.diagonal().zero_()  # bug fixed: wrong use of diagonal
+        return beta * varmatrix.sum()  # bug fixed: removed 0.5x
