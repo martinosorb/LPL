@@ -32,14 +32,17 @@ class LPLPass(torch.nn.Module):
     Arguments:
         n_dims: dimensions of the input, excluding batch size
     """
-    mse = torch.nn.MSELoss()
+    mse = torch.nn.MSELoss(reduction='sum')
 
-    def __init__(self, n_units, global_average_pooling=False):
+    def __init__(self, global_average_pooling=False):
         super().__init__()
-        self.register_buffer('current_z', torch.zeros(n_units))
+        self.current_z = None
         self.GAP = global_average_pooling
 
     def forward(self, z):
+        if self.current_z is None:
+            self.current_z = torch.zeros_like(z[..., 0, 0] if self.GAP else z)
+
         self.previous_z = self.current_z.detach()
         self.current_z = torch.mean(z, dim=(-1, -2)) if self.GAP else z
         return z.detach()
