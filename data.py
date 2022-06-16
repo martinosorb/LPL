@@ -12,7 +12,7 @@ noise_transform = transforms.Lambda(add_noise)
 
 multiple_transform = transforms.Compose([
     transforms.RandomHorizontalFlip(),
-    transforms.RandomAffine(degrees=5, translate=(0.1, 0.1), scale=(0.9, 1.1)),
-    transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
+    transforms.RandomAffine(degrees=2, translate=(0.02, 0.02), scale=(0.98, 1.02)),
+    transforms.ColorJitter(brightness=0.01, contrast=0.01, saturation=0.01, hue=0.01),
     transforms.GaussianBlur(kernel_size=(3, 5), sigma=(0.1, 2)),
 ])
