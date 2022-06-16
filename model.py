@@ -23,11 +23,11 @@ class LPLVGG11(nn.Module):
     def forward(self, x):
         return self.final_avgpool(self.model(x))
 
-    def compute_lpl_losses(self, lambda1, lambda2):
+    def compute_lpl_losses(self, lambda1, lambda2, lambda_pred=1.):
         loss = torch.zeros(3, len(RELU_IDX))
         for i in range(len(RELU_IDX)):
             lpl_layer = self.lpl_layers[i]
-            loss[0, i] = lpl_layer.predictive_loss()
+            loss[0, i] = lambda_pred * lpl_layer.predictive_loss()
             loss[1, i] = lambda1 * lpl_layer.hebbian_loss()
             loss[2, i] = lambda2 * lpl_layer.decorr_loss()
         return loss

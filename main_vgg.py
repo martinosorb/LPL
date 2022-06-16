@@ -5,6 +5,9 @@ from data import multiple_transform
 from visdom import Visdom
 
 EPOCHS_PER_LAYER = 10
+LA_1 = 1.
+LA_2 = 10.
+PRED = 1.
 
 model = LPLVGG11()
 n_layers = 8
@@ -39,7 +42,8 @@ for layer in range(n_layers):
             out = model(multiple_transform(images))  # first forward
             out = model(multiple_transform(images))  # second forward
 
-            losses = model.compute_lpl_losses(lambda1=1., lambda2=10.)
+            losses = model.compute_lpl_losses(
+                lambda1=LA_1, lambda2=LA_2, lambda_pred=PRED)
             loss_tracker += losses
 
             predictive, hebbian, decorr = losses[:, layer]
