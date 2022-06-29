@@ -1,7 +1,7 @@
 from model import LPLVGG11
 import torch
 import torchvision
-from data import multiple_transform
+from data import make_simclr_transforms
 from visdom import Visdom
 
 EPOCHS_PER_LAYER = 10
@@ -10,12 +10,16 @@ LA_2 = 10.
 PRED = 1.
 
 model = LPLVGG11()
+model.cuda()
 n_layers = 8
 
 cifar_ds = torchvision.datasets.CIFAR10(
     root='../datasets/', transform=torchvision.transforms.ToTensor())
 dl = torch.utils.data.DataLoader(cifar_ds, batch_size=800, num_workers=4)
-model.cuda()
+
+contrastive_transform = make_simclr_transforms(
+    jitter_strength=0.5, blur=0., img_size=32)
+
 
 for layer in range(n_layers):
     optimizer = torch.optim.Adam(
@@ -32,6 +36,7 @@ for layer in range(n_layers):
 
     step = 0
     for epoch in range(EPOCHS_PER_LAYER):
+        print(f"OPT LAYER {layer}, EPOCH {epoch}")
         batch_count = 0
         loss_tracker = torch.zeros(3, n_layers)  # 3 losses, 8 VGG layers
         for images, _ in dl:
@@ -39,8 +44,8 @@ for layer in range(n_layers):
             step += 1
             images = images.cuda()
 
-            out = model(multiple_transform(images))  # first forward
-            out = model(multiple_transform(images))  # second forward
+            out = model(contrastive_transform(images))  # first forward
+            out = model(contrastive_transform(images))  # second forward
 
             losses = model.compute_lpl_losses(
                 lambda1=LA_1, lambda2=LA_2, lambda_pred=PRED)
@@ -57,6 +62,5 @@ for layer in range(n_layers):
             optimizer.step()
             optimizer.zero_grad()
 
-        print(f"OPT LAYER {layer}")
         print(loss_tracker / batch_count)
     torch.save(model.state_dict(), "models/lplvgg11.pth")
