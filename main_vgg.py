@@ -4,10 +4,10 @@ import torchvision
 from data import make_simclr_transforms
 from visdom import Visdom
 
-EPOCHS_PER_LAYER = 10
+EPOCHS_PER_LAYER = 35
 LA_1 = 1.
 LA_2 = 10.
-PRED = 1.
+PRED = 0.
 
 model = LPLVGG11()
 model.cuda()
@@ -15,7 +15,7 @@ n_layers = 8
 
 cifar_ds = torchvision.datasets.CIFAR10(
     root='../datasets/', transform=torchvision.transforms.ToTensor())
-dl = torch.utils.data.DataLoader(cifar_ds, batch_size=800, num_workers=4)
+dl = torch.utils.data.DataLoader(cifar_ds, batch_size=1600, num_workers=8, shuffle=True)
 
 contrastive_transform = make_simclr_transforms(
     jitter_strength=0.5, blur=0., img_size=32)
@@ -24,9 +24,9 @@ contrastive_transform = make_simclr_transforms(
 for layer in range(n_layers):
     optimizer = torch.optim.Adam(
         model.weighted_layers[layer].parameters(),
-        lr=3e-4, weight_decay=1.5e-6)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=5, eta_min=1e-6)
+        lr=1e-3, weight_decay=1.5e-6)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+        optimizer, T_0=5, T_mult=2, eta_min=1e-7)
 
     viz = Visdom()
     viz.line([0.], [0.], win='Hebbian', opts=dict(title='Hebbian loss'))
@@ -38,7 +38,6 @@ for layer in range(n_layers):
     for epoch in range(EPOCHS_PER_LAYER):
         print(f"OPT LAYER {layer}, EPOCH {epoch}")
         batch_count = 0
-        loss_tracker = torch.zeros(3, n_layers)  # 3 losses, 8 VGG layers
         for images, _ in dl:
             batch_count += 1
             step += 1
@@ -47,20 +46,21 @@ for layer in range(n_layers):
             out = model(contrastive_transform(images))  # first forward
             out = model(contrastive_transform(images))  # second forward
 
-            losses = model.compute_lpl_losses(
-                lambda1=LA_1, lambda2=LA_2, lambda_pred=PRED)
-            loss_tracker += losses
+            lpl_layer = model.lpl_layers[layer]
+            predictive = lpl_layer.predictive_loss() * PRED
+            hebbian = lpl_layer.hebbian_loss() * LA_1
+            decorr = lpl_layer.decorr_loss() * LA_2
 
-            predictive, hebbian, decorr = losses[:, layer]
             viz.line([hebbian.item()], [step], win='Hebbian', update='append')
             viz.line([decorr.item()], [step], win='Decorr', update='append')
             viz.line([predictive.item()], [step], win='Predictive', update='append')
+            viz.line([scheduler.get_lr()], [step], win='LR', update='append')
 
-            optimized_loss = losses[:, layer].sum()
-            print(optimized_loss.item())
+            optimized_loss = hebbian + decorr + predictive
+            # print(optimized_loss.item())
             optimized_loss.backward()
             optimizer.step()
             optimizer.zero_grad()
 
-        print(loss_tracker / batch_count)
-    torch.save(model.state_dict(), "models/lplvgg11.pth")
+        scheduler.step()
+    torch.save(model.state_dict(), "models/lplvgg11_noPred.pth")
