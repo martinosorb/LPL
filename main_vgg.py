@@ -7,10 +7,12 @@ from visdom import Visdom
 EPOCHS_PER_LAYER = 35
 LA_1 = 1.
 LA_2 = 10.
-PRED = 0.
+PRED = 1.
+
+device = torch.device("cuda:1")
 
 model = LPLVGG11()
-model.cuda()
+model.to(device)
 n_layers = 8
 
 cifar_ds = torchvision.datasets.CIFAR10(
@@ -41,7 +43,7 @@ for layer in range(n_layers):
         for images, _ in dl:
             batch_count += 1
             step += 1
-            images = images.cuda()
+            images = images.to(device)
 
             out = model(contrastive_transform(images))  # first forward
             out = model(contrastive_transform(images))  # second forward

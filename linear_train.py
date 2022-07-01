@@ -5,11 +5,12 @@ from lpl import LPLPass
 from torchvision.datasets import CIFAR10
 from torchvision.transforms import ToTensor
 
+device = torch.device("cuda:1")
 
 model = LPLVGG11()
 NAME = "lplvgg11_noPred"
 model.load_state_dict(torch.load(f"models/{NAME}.pth"))
-model.cuda()
+model.to(device)
 
 
 cifar_ds = CIFAR10(root='../datasets/', transform=ToTensor(), train=True)
@@ -30,15 +31,15 @@ for i, layer in enumerate(TEST_LAYERS):
 
     linear = torch.nn.Sequential(
         torch.nn.Flatten(),
-        torch.nn.Linear(OUT_SIZES[i], 10).cuda()
+        torch.nn.Linear(OUT_SIZES[i], 10).to(device)
     )
     optimizer = torch.optim.Adam(linear.parameters(), lr=1e-3)
     criterion = torch.nn.CrossEntropyLoss()
 
     for epoch in range(10):
         for images, labels in dl:
-            images = images.cuda()
-            labels = labels.cuda()
+            images = images.to(device)
+            labels = labels.to(device)
 
             representation = submodel(images)
 
@@ -55,8 +56,8 @@ for i, layer in enumerate(TEST_LAYERS):
 
         accs = []
         for images, labels in dl_test:
-            images = images.cuda()
-            labels = labels.cuda()
+            images = images.to(device)
+            labels = labels.to(device)
             representation = submodel(images)
 
             out = linear(representation)
