@@ -15,12 +15,15 @@ model = LPLVGG11()
 model.to(device)
 n_layers = 8
 
-cifar_ds = torchvision.datasets.CIFAR10(
-    root='../datasets/', transform=torchvision.transforms.ToTensor())
-dl = torch.utils.data.DataLoader(cifar_ds, batch_size=1600, num_workers=8, shuffle=True)
+ds = torchvision.datasets.STL10(
+    root='../datasets/',
+    transform=torchvision.transforms.ToTensor(),
+    split='unlabeled'
+)
+dl = torch.utils.data.DataLoader(ds, batch_size=1600, num_workers=8, shuffle=True)
 
 contrastive_transform = make_simclr_transforms(
-    jitter_strength=0.5, blur=0., img_size=32)
+    jitter_strength=0.5, blur=0.5, img_size=96)
 
 
 for layer in range(n_layers):
@@ -65,4 +68,4 @@ for layer in range(n_layers):
             optimizer.zero_grad()
 
         scheduler.step()
-    torch.save(model.state_dict(), "models/lplvgg11_noPred.pth")
+    torch.save(model.state_dict(), "models/STL_lplvgg11_noPred.pth")
