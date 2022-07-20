@@ -1,10 +1,10 @@
-from model import LPLVGG11
+from lpl.model import LPLVGG11
 import torch
 import torchvision
-from transform import make_simclr_transforms
+from lpl.transform import make_simclr_transforms
 from visdom import Visdom
 
-EPOCHS_PER_LAYER = 35
+EPOCHS_PER_LAYER = 70
 LA_1 = 1.
 LA_2 = 10.
 PRED = 1.
@@ -12,6 +12,7 @@ PRED = 1.
 device = torch.device("cuda:1")
 
 model = LPLVGG11()
+model.load_state_dict(torch.load("models/STL_lplvgg11_noPred.pth"))
 model.to(device)
 n_layers = 8
 
@@ -31,7 +32,7 @@ for layer in range(n_layers):
         model.weighted_layers[layer].parameters(),
         lr=1e-3, weight_decay=1.5e-6)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-        optimizer, T_0=5, T_mult=2, eta_min=1e-7)
+        optimizer, T_0=10, T_mult=2, eta_min=1e-7)
 
     viz = Visdom()
     viz.line([0.], [0.], win='Hebbian', opts=dict(title='Hebbian loss'))
@@ -62,10 +63,9 @@ for layer in range(n_layers):
             viz.line([scheduler.get_lr()], [step], win='LR', update='append')
 
             optimized_loss = hebbian + decorr + predictive
-            # print(optimized_loss.item())
             optimized_loss.backward()
             optimizer.step()
             optimizer.zero_grad()
 
         scheduler.step()
-    torch.save(model.state_dict(), "models/STL_lplvgg11_noPred.pth")
+    torch.save(model.state_dict(), "models/STL_lplvgg11_finetune70.pth")
