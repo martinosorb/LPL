@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from lpl import LPLPass
-from data import multiple_transform
+from transform import multiple_transform
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 from visdom import Visdom

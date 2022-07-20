@@ -1,7 +1,7 @@
 from model import LPLVGG11
 import torch
 import torchvision
-from data import make_simclr_transforms
+from transform import make_simclr_transforms
 from visdom import Visdom
 
 EPOCHS_PER_LAYER = 35

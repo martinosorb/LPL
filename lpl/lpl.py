@@ -1,27 +1,6 @@
 import torch
 
 
-# class MeanVarTracker:
-#     def __init__(self, momentum=0.1):
-#         self.reset()
-#         self.momentum = momentum
-
-#     def _tracker_init(self, x):
-#         self.mean = torch.zeros_like(x[0], requires_grad=False)
-#         self.var = torch.ones_like(x[0], requires_grad=True)
-
-#     def reset(self):
-#         self.mean = None
-#         self.var = None
-
-#     def __call__(self, x):
-#         if self.mean is None:
-#             self._tracker_init(x)
-#         self.mean += self.momentum * (x.mean(0).detach() - self.mean)
-#         var = torch.mean((x - self.mean)**2, axis=0)
-#         self.var = self.var + self.momentum * (var - self.var)
-
-
 class LPLPass(torch.nn.Module):
     """
     This layer should do three things:
