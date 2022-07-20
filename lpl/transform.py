@@ -1,14 +1,4 @@
 from torchvision import transforms as T
-import torch
-
-
-def add_noise(img):
-    noise = torch.randn(img.size(), device=img.device)*0.2
-    img = torch.clamp(img+noise, 0., 1.)
-    return img
-
-
-noise_transform = T.Lambda(add_noise)
 
 
 def make_simclr_transforms(jitter_strength=0.5, blur=0., img_size=32):
