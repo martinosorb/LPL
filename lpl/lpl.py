@@ -16,15 +16,19 @@ class LPLPass(torch.nn.Module):
     def __init__(self, global_average_pooling=False):
         super().__init__()
         self.current_z = None
+        self.previous_z = None
         self.GAP = global_average_pooling
 
     def forward(self, z):
-        if self.current_z is None:
-            self.current_z = torch.zeros_like(z[..., 0, 0] if self.GAP else z)
-
-        self.previous_z = self.current_z.detach()
-        self.current_z = torch.mean(z, dim=(-1, -2)) if self.GAP else z
+        this_out = torch.mean(z, dim=(-1, -2)) if self.GAP else z
+        if self.current_z is not None:
+            self.previous_z = self.current_z.detach()
+        self.current_z = this_out
         return z.detach()
+
+    def reset(self):
+        self.current_z = None
+        self.previous_z = None
 
     def predictive_loss(self):
         return 0.5 * self.mse(self.current_z, self.previous_z)  # looks good

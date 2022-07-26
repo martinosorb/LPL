@@ -12,7 +12,7 @@ PRED = 1.
 device = torch.device("cuda:1")
 
 model = LPLVGG11()
-model.load_state_dict(torch.load("models/STL_lplvgg11_noPred.pth"))
+# model.load_state_dict(torch.load("models/STL_lplvgg11_noPred.pth"))
 model.to(device)
 n_layers = 8
 
@@ -67,5 +67,7 @@ for layer in range(n_layers):
             optimizer.step()
             optimizer.zero_grad()
 
+            model.reset()
+
         scheduler.step()
-    torch.save(model.state_dict(), "models/STL_lplvgg11_finetune70.pth")
+    torch.save(model.state_dict(), "models/STL_lplvgg11_70epochs.pth")

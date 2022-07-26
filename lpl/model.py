@@ -35,3 +35,7 @@ class LPLVGG11(nn.Module):
             loss[1, i] = lambda1 * lpl_layer.hebbian_loss()
             loss[2, i] = lambda2 * lpl_layer.decorr_loss()
         return loss
+
+    def reset(self):
+        for i in range(len(self.RELU_IDX)):
+            self.lpl_layers[i].reset()
