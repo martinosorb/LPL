@@ -1,7 +1,7 @@
 from lpl.model import LPLVGG11
 import torch
 import torchvision
-from lpl.transform import make_simclr_transforms
+from lpl.transform import DoubleTransformDataset, make_simclr_transforms
 from visdom import Visdom
 
 EPOCHS_PER_LAYER = 70
@@ -21,10 +21,12 @@ ds = torchvision.datasets.STL10(
     transform=torchvision.transforms.ToTensor(),
     split='unlabeled'
 )
-dl = torch.utils.data.DataLoader(ds, batch_size=1600, num_workers=8, shuffle=True)
 
 contrastive_transform = make_simclr_transforms(
-    jitter_strength=0.5, blur=0.5, img_size=96)
+    jitter_strength=0.5, blur=0.5, img_size=96
+)
+ds = DoubleTransformDataset(ds, contrastive_transform)
+dl = torch.utils.data.DataLoader(ds, batch_size=1600, num_workers=8, shuffle=True)
 
 
 for layer in range(n_layers):
@@ -44,13 +46,12 @@ for layer in range(n_layers):
     for epoch in range(EPOCHS_PER_LAYER):
         print(f"OPT LAYER {layer}, EPOCH {epoch}")
         batch_count = 0
-        for images, _ in dl:
+        for images1, images2, _ in dl:
             batch_count += 1
             step += 1
-            images = images.to(device)
 
-            out = model(contrastive_transform(images))  # first forward
-            out = model(contrastive_transform(images))  # second forward
+            out = model(images1.to(device))  # first forward
+            out = model(images2.to(device))  # second forward
 
             lpl_layer = model.lpl_layers[layer]
             predictive = lpl_layer.predictive_loss() * PRED

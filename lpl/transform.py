@@ -1,4 +1,5 @@
 from torchvision import transforms as T
+import torch
 
 
 def make_simclr_transforms(jitter_strength=0.5, blur=0., img_size=32):
@@ -19,3 +20,16 @@ def make_simclr_transforms(jitter_strength=0.5, blur=0., img_size=32):
     ])
 
     return multiple_transform
+
+
+class DoubleTransformDataset(torch.utils.data.Dataset):
+    def __init__(self, dataset, transform):
+        self.dataset = dataset
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+         input, target = self.dataset[idx]
+         return (self.transform(input), self.transform(input), target)
