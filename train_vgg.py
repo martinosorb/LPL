@@ -23,10 +23,11 @@ ds = torchvision.datasets.STL10(
 )
 
 contrastive_transform = make_simclr_transforms(
-    jitter_strength=0.5, blur=0.5, img_size=96
-)
+    jitter_strength=0.5, blur=0.5, img_size=96)
 ds = DoubleTransformDataset(ds, contrastive_transform)
-dl = torch.utils.data.DataLoader(ds, batch_size=1600, num_workers=8, shuffle=True)
+dl = torch.utils.data.DataLoader(
+    ds, batch_size=1024, num_workers=8,
+    shuffle=True, drop_last=True)
 
 
 for layer in range(n_layers):

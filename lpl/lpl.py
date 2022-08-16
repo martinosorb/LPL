@@ -42,7 +42,7 @@ class LPLPass(torch.nn.Module):
         z = self.current_z
         batch_size = z.shape[0]
         n_neurons = z.shape[1]
-        beta = 1./batch_size/(n_neurons-1)
+        beta = 1./batch_size/(n_neurons-1)/4.
 
         centered_z_sq = (z - z.mean(0).detach()) ** 2  # bug fixed: mean along axis
         varmatrix = torch.einsum("bi,bj->ij", centered_z_sq, centered_z_sq)
