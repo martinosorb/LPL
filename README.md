@@ -30,3 +30,12 @@ where `avgpool` applies global average pooling before the decoder.
 Then, the result can be plotted with
 ```python make_figure.py reports/*```
 which will create a PNG image in `figures`.
+
+## Tests
+I wrote a few tests to check that the deltas found by autograd are the same reported on the paper.
+A couple of observations:
+- There's a factor of 2 missing in the Hebbian loss and a factor of 4 in the Decorrelation loss,
+this should not really affect the result, except that the lambdas may be slightly different.
+- I noticed the Predictive loss is extensive (the value depends on batch size), while
+the other two are not.
+To run tests, simply run `pytest`.
