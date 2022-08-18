@@ -9,7 +9,7 @@ LA_1 = 1.
 LA_2 = 10.
 PRED = 1.
 
-device = torch.device("cuda:1")
+device = torch.device("cuda")
 
 model = LPLVGG11()
 # model.load_state_dict(torch.load("models/STL_lplvgg11_noPred.pth"))
@@ -46,9 +46,8 @@ for layer in range(n_layers):
     step = 0
     for epoch in range(EPOCHS_PER_LAYER):
         print(f"OPT LAYER {layer}, EPOCH {epoch}")
-        batch_count = 0
+
         for images1, images2, _ in dl:
-            batch_count += 1
             step += 1
 
             out = model(images1.to(device))  # first forward
